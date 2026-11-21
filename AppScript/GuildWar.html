@@ -1,0 +1,798 @@
+<!DOCTYPE html>
+<html lang="en" class="dark">
+<head>
+  <base target="_top">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel+Decorative:wght@700;900&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/fuse.js@7.0.0"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+  <style>
+    ::-webkit-scrollbar { width: 8px; height: 8px; }
+    ::-webkit-scrollbar-track { background: #09090b; }
+    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 9999px; }
+    ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+  </style>
+</head>
+<body class="bg-zinc-950 text-zinc-100 p-4 font-sans text-base antialiased selection:bg-amber-500/30 selection:text-amber-200 max-w-[1440px] mx-auto">
+
+  <!-- Top Header -->
+  <div class="flex items-center justify-between mb-3">
+    <div class="flex items-center gap-3">
+      <span class="text-4xl font-black text-white select-none leading-none pr-1" style="font-family: 'Cinzel Decorative', serif; text-shadow: 0 0 10px rgba(255,255,255,0.9), 0 0 24px rgba(255,255,255,0.45);">
+        X
+      </span>
+      <div>
+        <div class="flex items-center gap-2">
+          <h1 class="text-base font-bold tracking-tight text-zinc-100">XForces Guild War Logger</h1>
+          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
+            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/>
+            </svg>
+            Guild War
+          </span>
+        </div>
+        <p class="text-xs text-zinc-400">Keyboard-ready workflow: <kbd class="px-1.5 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-[10px] text-zinc-300">Tab</kbd> <kbd class="px-1.5 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-[10px] text-zinc-300">←↑↓→</kbd> <kbd class="px-1.5 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-[10px] text-zinc-300">Enter</kbd></p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Guild War Configuration Card -->
+  <div class="bg-zinc-900/70 backdrop-blur border border-zinc-800/90 rounded-xl p-3.5 mb-3 space-y-3">
+    <div class="grid grid-cols-12 gap-3.5">
+      <div class="col-span-3">
+        <label class="block text-xs font-medium text-zinc-400 mb-1">Season Tab</label>
+        <select id="warSeason" class="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-amber-500/60 focus:outline-none rounded-lg px-3 py-1.5 text-sm text-zinc-100 transition-colors"></select>
+      </div>
+      <div class="col-span-3">
+        <label class="block text-xs font-medium text-zinc-400 mb-1">War Round</label>
+        <select id="warRound" class="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-amber-500/60 focus:outline-none rounded-lg px-3 py-1.5 text-sm font-semibold text-sky-400 transition-colors"></select>
+      </div>
+      <div class="col-span-6 flex items-end pb-1">
+        <label class="flex items-center gap-3 cursor-pointer select-none group">
+          <div class="relative flex items-center">
+            <input type="checkbox" id="sweepAll" onchange="onSweepToggle(this.checked)" class="peer sr-only">
+            <div class="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-400 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500 peer-checked:after:bg-zinc-950"></div>
+          </div>
+          <div>
+            <span class="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">Sweep All Flag</span>
+            <span class="block text-[11px] text-zinc-500">Auto-fills Our Score to 3575</span>
+          </div>
+        </label>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-12 gap-3.5 pt-2.5 border-t border-zinc-800/80">
+      <div class="col-span-6">
+        <label class="block text-xs font-medium text-zinc-400 mb-1">Opponent Guild (Row 37)</label>
+        <input type="text" id="enemyGuild" placeholder="e.g., BuffaloRiders" class="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-amber-500/60 focus:outline-none rounded-lg px-3 py-1.5 text-sm text-zinc-100 placeholder:text-zinc-600 transition-colors">
+      </div>
+      <div class="col-span-3">
+        <label class="block text-xs font-medium text-zinc-400 mb-1">Our Score (Row 38)</label>
+        <input type="number" id="ourScore" placeholder="3515" class="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-emerald-500/60 focus:outline-none rounded-lg px-3 py-1.5 text-sm font-mono font-semibold text-emerald-400 placeholder:text-zinc-600 transition-colors">
+      </div>
+      <div class="col-span-3">
+        <label class="block text-xs font-medium text-zinc-400 mb-1">Opponent Score (Row 38)</label>
+        <input type="number" id="enemyScore" placeholder="2065" class="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-rose-500/60 focus:outline-none rounded-lg px-3 py-1.5 text-sm font-mono font-semibold text-rose-400 placeholder:text-zinc-600 transition-colors">
+      </div>
+    </div>
+  </div>
+
+  <!-- Drag & Drop Upload Zone -->
+  <div id="dropZone" onclick="document.getElementById('imageInput').click()" class="group relative border border-dashed border-zinc-700 hover:border-amber-500/70 bg-zinc-900/40 hover:bg-zinc-900/80 rounded-xl p-3 mb-3 cursor-pointer transition-all">
+    <input type="file" id="imageInput" multiple accept="image/*" class="hidden" onchange="processImages(this.files)">
+    <div class="flex items-center justify-between">
+      <div class="flex items-center gap-3">
+        <div class="w-9 h-9 rounded-lg bg-zinc-800/80 group-hover:bg-amber-500/10 border border-zinc-700/80 group-hover:border-amber-500/30 flex items-center justify-center text-zinc-300 group-hover:text-amber-400 transition-colors">
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"/></svg>
+        </div>
+        <div>
+          <p id="statusText" class="text-sm font-semibold text-zinc-200">Click to upload or drag & drop Guild War screenshots</p>
+          <p class="text-xs text-zinc-500">Click any row to focus its Member field, then use Tab / Arrow keys / Enter to navigate everything.</p>
+        </div>
+      </div>
+      <span class="px-4 py-1.5 rounded-lg bg-zinc-800 group-hover:bg-amber-500 text-zinc-200 group-hover:text-zinc-950 text-sm font-semibold transition-colors">
+        Browse Files
+      </span>
+    </div>
+    <div id="progressWrapper" class="hidden mt-2.5 w-full bg-zinc-800 rounded-full h-1.5 overflow-hidden">
+      <div id="progressBar" class="bg-amber-500 h-1.5 rounded-full transition-all duration-300" style="width: 0%"></div>
+    </div>
+  </div>
+
+  <!-- Data Verification Table -->
+  <div class="border border-zinc-800 rounded-xl bg-zinc-900/30 overflow-hidden mb-3">
+    <div class="overflow-y-auto max-h-[calc(100vh-295px)] min-h-[210px]">
+      <table class="w-full text-left border-collapse">
+        <thead class="bg-zinc-900/95 backdrop-blur text-xs font-semibold uppercase tracking-wider text-zinc-400 sticky top-0 z-10 border-b border-zinc-800">
+          <tr>
+            <th class="py-2.5 px-3 w-12">#</th>
+            <th class="py-2.5 px-3 w-48">Name Crop (Enter/Click)</th>
+            <th class="py-2.5 px-3 w-32">Raw OCR</th>
+            <th class="py-2.5 px-3">Matched Member (Enter/Click)</th>
+            <th class="py-2.5 px-3 w-32">Win</th>
+            <th class="py-2.5 px-3 w-24">Lose</th>
+            <th class="py-2.5 px-3 w-52">Score Crop (Enter/Click)</th>
+          </tr>
+        </thead>
+        <tbody id="resultBody" class="divide-y divide-zinc-800/60 text-sm">
+          <tr>
+            <td colspan="7" class="py-12 text-center text-zinc-500 text-sm">
+              No screenshots scanned yet. Upload images above to begin.
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+  <!-- Action Footer -->
+  <div class="flex items-center justify-between pt-0.5">
+    <div id="missingAlert" class="text-sm text-zinc-500 font-medium">Waiting for scan...</div>
+    <button id="saveBtn" onclick="submitToSheet()" disabled class="inline-flex items-center gap-2 bg-emerald-500 hover:bg-emerald-400 disabled:bg-zinc-800 disabled:text-zinc-500 disabled:cursor-not-allowed text-zinc-950 font-bold text-sm px-6 py-2 rounded-lg shadow-lg shadow-emerald-500/10 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:ring-offset-2 focus:ring-offset-zinc-950 transition-all">
+      <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg>
+      Save to Google Sheet
+    </button>
+  </div>
+
+  <!-- Floating Modern Searchable Combobox Popover -->
+  <div id="memberPopover" class="hidden fixed z-50 w-80 bg-zinc-900 border border-purple-400/60 rounded-xl shadow-2xl shadow-black/90 overflow-hidden">
+    <div class="p-2.5 border-b border-zinc-800 flex items-center gap-2 bg-zinc-950/60">
+      <svg class="w-4 h-4 text-purple-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/></svg>
+      <input type="text" id="memberSearchInput" placeholder="Search IGN or nickname..." oninput="renderPopoverOptions(true)" onkeydown="handlePopoverKey(event)" class="w-full bg-transparent text-sm text-zinc-100 placeholder:text-zinc-500 focus:outline-none">
+    </div>
+    <div id="memberPopoverList" class="max-h-64 overflow-y-auto p-1.5 space-y-1"></div>
+  </div>
+
+  <script>
+    let roster = [];
+    let searchableRoster = [];
+    let extractedRows = [];
+    let fullImages = [];
+    let activeRowIdx = null;
+    let highlightedRowIdx = null;
+    let popoverFocusIdx = 0;
+
+    const COL_ORDER = ['nameImg', 'member', 'val1', 'val2', 'scoreImg'];
+
+    const roundSel = document.getElementById('warRound');
+    for (let i = 1; i <= 18; i++) {
+      const opt = document.createElement('option');
+      opt.value = i;
+      opt.textContent = `Round ${i}`;
+      roundSel.appendChild(opt);
+    }
+
+    const dropZone = document.getElementById('dropZone');
+    dropZone.addEventListener('dragover', e => { e.preventDefault(); dropZone.classList.add('border-amber-500', 'bg-zinc-900'); });
+    dropZone.addEventListener('dragleave', () => { dropZone.classList.remove('border-amber-500', 'bg-zinc-900'); });
+    dropZone.addEventListener('drop', e => {
+      e.preventDefault();
+      dropZone.classList.remove('border-amber-500', 'bg-zinc-900');
+      if (e.dataTransfer.files.length) processImages(e.dataTransfer.files);
+    });
+
+    document.addEventListener('click', e => {
+      const popover = document.getElementById('memberPopover');
+      if (!popover.contains(e.target) && !e.target.closest('[data-col="member"]')) {
+        closeMemberPopover(false);
+      }
+      if (highlightedRowIdx !== null) {
+        const clickedRow = e.target.closest('tr[data-row-idx]');
+        if (!clickedRow && !popover.contains(e.target)) {
+          highlightedRowIdx = null;
+          updateRowHighlights();
+        }
+      }
+    });
+
+    document.addEventListener('keydown', e => {
+      const popover = document.getElementById('memberPopover');
+      if (!popover.classList.contains('hidden')) {
+        if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) {
+          handlePopoverKey(e);
+        }
+        return;
+      }
+
+      const activeEl = document.activeElement;
+      const cellEl = activeEl ? activeEl.closest('[data-row][data-col]') : null;
+      if (!cellEl) return;
+
+      const rowIdx = Number(cellEl.dataset.row);
+      const colName = cellEl.dataset.col;
+      const colPos = COL_ORDER.indexOf(colName);
+
+      if (e.key === 'Tab') {
+        e.preventDefault();
+        if (!e.shiftKey) {
+          if (colPos < COL_ORDER.length - 1) {
+            focusCell(rowIdx, COL_ORDER[colPos + 1]);
+          } else if (rowIdx < extractedRows.length - 1) {
+            focusCell(rowIdx + 1, 'member');
+          } else {
+            highlightedRowIdx = null;
+            updateRowHighlights();
+            const saveBtn = document.getElementById('saveBtn');
+            if (!saveBtn.disabled) saveBtn.focus();
+          }
+        } else {
+          if (colPos > 0) {
+            focusCell(rowIdx, COL_ORDER[colPos - 1]);
+          } else if (rowIdx > 0) {
+            focusCell(rowIdx - 1, COL_ORDER[COL_ORDER.length - 1]);
+          }
+        }
+        return;
+      }
+
+      if (e.key === 'ArrowRight' || e.key === 'ArrowLeft') {
+        if (activeEl.tagName === 'INPUT') {
+          const valLen = activeEl.value.length;
+          const selStart = activeEl.selectionStart;
+          const selEnd = activeEl.selectionEnd;
+          const allSelected = selStart === 0 && selEnd === valLen && valLen > 0;
+          if (!allSelected) {
+            if (e.key === 'ArrowRight' && selEnd < valLen) return;
+            if (e.key === 'ArrowLeft' && selStart > 0) return;
+          }
+        }
+        e.preventDefault();
+        const nextPos = e.key === 'ArrowRight' ? colPos + 1 : colPos - 1;
+        if (nextPos >= 0 && nextPos < COL_ORDER.length) {
+          focusCell(rowIdx, COL_ORDER[nextPos]);
+        }
+        return;
+      }
+
+      if (e.key === 'ArrowDown' || e.key === 'ArrowUp') {
+        e.preventDefault();
+        const nextRow = e.key === 'ArrowDown' ? rowIdx + 1 : rowIdx - 1;
+        if (nextRow >= 0 && nextRow < extractedRows.length) {
+          focusCell(nextRow, colName);
+        }
+        return;
+      }
+
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        if (colName === 'nameImg' || colName === 'scoreImg') {
+          const row = extractedRows[rowIdx];
+          openFullImageWindow(row.imgIndex, row.rowInImg, rowIdx);
+        } else if (colName === 'member') {
+          openMemberPopover(rowIdx, cellEl);
+        } else if (colName === 'val1' || colName === 'val2') {
+          if (rowIdx < extractedRows.length - 1) {
+            focusCell(rowIdx + 1, 'member');
+          } else {
+            highlightedRowIdx = null;
+            updateRowHighlights();
+            const saveBtn = document.getElementById('saveBtn');
+            if (!saveBtn.disabled) saveBtn.focus();
+          }
+        }
+      }
+    });
+
+    function focusCell(rowIdx, colName) {
+      const target = document.querySelector(`[data-row="${rowIdx}"][data-col="${colName}"]`);
+      if (!target) return;
+      setHighlightedRow(rowIdx);
+      target.focus();
+      target.scrollIntoView({ block: 'nearest' });
+      if (target.tagName === 'INPUT') target.select();
+    }
+
+    function onRowClick(rowIdx, e) {
+      if (e.target.closest('[data-col]')) {
+        setHighlightedRow(rowIdx);
+        return;
+      }
+      focusCell(rowIdx, 'member');
+    }
+
+    function setHighlightedRow(rowIdx) {
+      if (highlightedRowIdx === rowIdx) return;
+      highlightedRowIdx = rowIdx;
+      updateRowHighlights();
+    }
+
+    function updateRowHighlights() {
+      const rows = document.querySelectorAll('tr[data-row-idx]');
+      rows.forEach(tr => {
+        const idx = Number(tr.dataset.rowIdx);
+        const row = extractedRows[idx];
+        if (!row) return;
+
+        const isDuplicate = row.ign && extractedRows.filter(r => r.ign === row.ign).length > 1;
+        const isHighlighted = highlightedRowIdx === idx;
+
+        tr.className = isHighlighted
+          ? 'bg-purple-500/20 ring-1 ring-inset ring-purple-400/60 transition-colors cursor-pointer'
+          : (row.statError || isDuplicate
+            ? 'bg-rose-500/10 transition-colors cursor-pointer'
+            : (row.lowConf || !row.ign
+              ? 'bg-amber-500/10 transition-colors cursor-pointer'
+              : 'hover:bg-zinc-900/80 transition-colors cursor-pointer'));
+      });
+    }
+
+    google.script.run.withSuccessHandler(cfg => {
+      roster = cfg.members || [];
+      const seasonSel = document.getElementById('warSeason');
+      cfg.seasons.forEach(s => {
+        const opt = document.createElement('option');
+        opt.value = s; opt.textContent = s;
+        seasonSel.appendChild(opt);
+      });
+      searchableRoster = roster.map(full => ({
+        full,
+        clean: full.replace(/\s*\(.*?\)\s*/g, '').trim()
+      }));
+    }).getGuildWarConfig();
+
+    function onSweepToggle(checked) {
+      const ourScoreInput = document.getElementById('ourScore');
+      if (checked) {
+        ourScoreInput.value = '3575';
+      } else if (ourScoreInput.value === '3575') {
+        ourScoreInput.value = '';
+      }
+    }
+
+    function openFullImageWindow(imgIndex, rowInImg, rowIdx) {
+      setHighlightedRow(rowIdx);
+      const fullDataUrl = fullImages[imgIndex];
+      if (!fullDataUrl) return;
+
+      const win = window.open(
+        '',
+        'XForcesImagePreview',
+        'width=540,height=380,left=16,top=16,menubar=no,toolbar=no,location=no,status=no,resizable=yes'
+      );
+      if (!win) {
+        alert('Popup blocked! Please allow popups for this site to view full screenshots.');
+        return;
+      }
+
+      const highlightTopPct = rowInImg * 20;
+      win.document.write(`
+        <!DOCTYPE html>
+        <html>
+        <head>
+          <title>Image #${imgIndex + 1} (Row ${rowInImg + 1})</title>
+          <style>
+            body { margin: 0; background: #09090b; color: #f4f4f5; font-family: system-ui, sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; min-height: 100vh; padding: 10px; box-sizing: border-box; }
+            .header { margin-bottom: 8px; font-size: 12px; color: #a1a1aa; }
+            .header b { color: #fbbf24; }
+            .img-container { position: relative; max-width: 100%; border: 1px solid #27272a; border-radius: 8px; overflow: hidden; box-shadow: 0 20px 40px -12px rgba(0,0,0,0.8); }
+            img { display: block; max-width: 100%; max-height: 82vh; height: auto; }
+            .row-highlight { position: absolute; left: 0; right: 0; top: ${highlightTopPct}%; height: 20%; border: 3px solid #a855f7; background: rgba(168, 85, 247, 0.16); box-sizing: border-box; pointer-events: none; }
+          </style>
+        </head>
+        <body>
+          <div class="header">Screenshot <b>#${imgIndex + 1}</b> — Highlighting <b>Row ${rowInImg + 1}</b> (Esc to close)</div>
+          <div class="img-container">
+            <img src="${fullDataUrl}" alt="Full Screenshot" />
+            <div class="row-highlight"></div>
+          </div>
+          <script>document.addEventListener('keydown', e => { if (e.key === 'Escape') window.close(); });<\/script>
+        </body>
+        </html>
+      `);
+      win.document.close();
+      win.focus();
+    }
+
+    function cropRegion(img, xPct, yPct, wPct, hPct, binarize = true) {
+      const canvas = document.createElement('canvas');
+      const sx = img.width * xPct, sy = img.height * yPct;
+      const sw = img.width * wPct, sh = img.height * hPct;
+      canvas.width = sw * 2.5; canvas.height = sh * 2.5;
+      const ctx = canvas.getContext('2d');
+      ctx.drawImage(img, sx, sy, sw, sh, 0, 0, canvas.width, canvas.height);
+
+      if (binarize) {
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const d = imgData.data;
+        for (let i = 0; i < d.length; i += 4) {
+          const gray = 0.299 * d[i] + 0.587 * d[i + 1] + 0.114 * d[i + 2];
+          const val = (gray < 115) ? 0 : 255;
+          d[i] = d[i + 1] = d[i + 2] = val;
+        }
+        ctx.putImageData(imgData, 0, 0);
+      }
+      return canvas.toDataURL('image/png');
+    }
+
+    function imageToDataUrl(img) {
+      const canvas = document.createElement('canvas');
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.getContext('2d').drawImage(img, 0, 0);
+      return canvas.toDataURL('image/jpeg', 0.92);
+    }
+
+    async function processImages(files) {
+      if (!files.length) return;
+      const status = document.getElementById('statusText');
+      const progressWrapper = document.getElementById('progressWrapper');
+      const progressBar = document.getElementById('progressBar');
+
+      extractedRows = [];
+      fullImages = [];
+      highlightedRowIdx = null;
+
+      progressWrapper.classList.remove('hidden');
+      progressBar.style.width = '5%';
+
+      const worker = await Tesseract.createWorker('eng');
+
+      for (let f = 0; f < files.length; f++) {
+        status.textContent = `⏳ Scanning image ${f + 1} of ${files.length}...`;
+        progressBar.style.width = `${Math.round(((f + 0.5) / files.length) * 100)}%`;
+        const img = await loadImage(files[f]);
+        fullImages.push(imageToDataUrl(img));
+
+        for (let r = 0; r < 5; r++) {
+          const rowTop = r * 0.20;
+          const previewNameImg = cropRegion(img, 0.235, rowTop + 0.04, 0.225, 0.11, false);
+          const ocrNameImg = cropRegion(img, 0.24, rowTop + 0.045, 0.215, 0.10, true);
+          const previewScoreImg = cropRegion(img, 0.47, rowTop + 0.015, 0.28, 0.085, false);
+          const wlCrop = cropRegion(img, 0.47, rowTop + 0.02, 0.28, 0.08, true);
+
+          await worker.setParameters({ tessedit_char_whitelist: 'ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_-. ' });
+          const rawName = (await worker.recognize(ocrNameImg)).data.text.trim().replace(/\n/g, '');
+
+          await worker.setParameters({ tessedit_char_whitelist: '0123456789 ' });
+          const wlText = (await worker.recognize(wlCrop)).data.text.trim();
+          const wlNums = wlText.match(/\d+/g) || [];
+
+          let win = wlNums.length > 0 ? Number(wlNums[0]) : 0;
+          let lose = wlNums.length > 1 ? Number(wlNums[1]) : 0;
+          let statError = false;
+
+          if (win > 5 || lose > 5 || (win + lose) > 5 || wlNums.length < 2) {
+            if (win > 5) win = win % 10;
+            if (win > 5) win = 0;
+            if (lose > 5) lose = lose % 10;
+            if (lose > 5) lose = 0;
+            statError = true;
+          }
+
+          extractedRows.push({ imgIndex: f, rowInImg: r, previewNameImg, previewScoreImg, rawName, ign: '', val1: win, val2: lose, statError, lowConf: false });
+        }
+      }
+
+      await worker.terminate();
+      progressBar.style.width = '100%';
+      setTimeout(() => progressWrapper.classList.add('hidden'), 600);
+
+      assignUniqueMembers();
+      renderTable();
+      checkMissingMembers();
+
+      status.textContent = `✅ Scanned ${extractedRows.length} rows! Use Tab / Arrow keys / Enter to review & edit.`;
+      document.getElementById('saveBtn').disabled = false;
+
+      if (extractedRows.length > 0) {
+        const firstFlagged = extractedRows.findIndex(r => !r.ign || r.lowConf || r.statError);
+        focusCell(firstFlagged !== -1 ? firstFlagged : 0, 'member');
+      }
+    }
+
+    function assignUniqueMembers() {
+      const available = new Set(roster);
+      const candidates = [];
+
+      extractedRows.forEach((row, rowIdx) => {
+        if (!row.rawName || row.rawName.length < 2) return;
+        const fuse = new Fuse(searchableRoster, { keys: ['clean'], includeScore: true, threshold: 0.6 });
+        const matches = fuse.search(row.rawName);
+        matches.forEach(m => candidates.push({ rowIdx, full: m.item.full, score: m.score }));
+      });
+
+      candidates.sort((a, b) => a.score - b.score);
+
+      const assignedRows = new Set();
+      candidates.forEach(c => {
+        if (!assignedRows.has(c.rowIdx) && available.has(c.full)) {
+          extractedRows[c.rowIdx].ign = c.full;
+          extractedRows[c.rowIdx].lowConf = c.score > 0.35;
+          assignedRows.add(c.rowIdx);
+          available.delete(c.full);
+        }
+      });
+
+      extractedRows.forEach((row, idx) => {
+        if (!assignedRows.has(idx)) {
+          row.ign = '';
+          row.lowConf = true;
+        }
+      });
+    }
+
+    function loadImage(file) {
+      return new Promise(resolve => {
+        const img = new Image();
+        img.onload = () => resolve(img);
+        img.src = URL.createObjectURL(file);
+      });
+    }
+
+    function openMemberPopover(idx, triggerEl) {
+      activeRowIdx = idx;
+      popoverFocusIdx = 0;
+      setHighlightedRow(idx);
+
+      const popover = document.getElementById('memberPopover');
+      const searchInput = document.getElementById('memberSearchInput');
+      const rect = triggerEl.getBoundingClientRect();
+
+      popover.classList.remove('hidden');
+      searchInput.value = '';
+
+      const spaceBelow = window.innerHeight - rect.bottom;
+      popover.style.top = spaceBelow < 280 ? `${Math.max(8, rect.top - 275)}px` : `${rect.bottom + 6}px`;
+      popover.style.left = `${Math.min(window.innerWidth - 330, rect.left)}px`;
+
+      renderPopoverOptions(true);
+      setTimeout(() => searchInput.focus(), 10);
+    }
+
+    function closeMemberPopover(restoreFocus = true) {
+      const prevRow = activeRowIdx;
+      document.getElementById('memberPopover').classList.add('hidden');
+      activeRowIdx = null;
+      if (restoreFocus && prevRow !== null) focusCell(prevRow, 'member');
+    }
+
+    function renderPopoverOptions(resetFocus = true) {
+      if (activeRowIdx === null) return;
+      if (resetFocus) popoverFocusIdx = 0;
+
+      const query = document.getElementById('memberSearchInput').value.trim().toLowerCase();
+      const usedSet = new Set(extractedRows.map((r, i) => i !== activeRowIdx ? r.ign : '').filter(Boolean));
+      const currentVal = extractedRows[activeRowIdx].ign;
+
+      const filtered = roster.filter(m => m.toLowerCase().includes(query));
+      const unassigned = filtered.filter(m => !usedSet.has(m));
+      const assigned = filtered.filter(m => usedSet.has(m));
+
+      const listEl = document.getElementById('memberPopoverList');
+      if (filtered.length === 0) {
+        listEl.innerHTML = `<div class="py-5 text-center text-sm text-zinc-500">No members matching "${query}"</div>`;
+        return;
+      }
+
+      const orderedItems = [
+        ...unassigned.map(m => ({ m, isAssigned: false })),
+        ...assigned.map(m => ({ m, isAssigned: true }))
+      ];
+
+      popoverFocusIdx = Math.max(0, Math.min(popoverFocusIdx, orderedItems.length - 1));
+
+      let itemCounter = 0;
+      const renderItem = (m, isAssigned) => {
+        const idx = itemCounter++;
+        const isFocused = idx === popoverFocusIdx;
+        const isSelected = m === currentVal;
+
+        const stateClass = isFocused
+          ? 'bg-purple-500/25 text-purple-100 ring-1 ring-purple-400 font-semibold'
+          : (isSelected ? 'bg-zinc-800/90 text-amber-300 font-medium' : 'text-zinc-200 hover:bg-zinc-800');
+
+        return `
+          <button type="button" data-option-idx="${idx}"
+            onmouseenter="setPopoverFocus(${idx})"
+            onclick="selectMemberFromPopover('${m.replace(/'/g, "\\'")}')"
+            class="w-full flex items-center justify-between px-3 py-2 rounded-lg text-left text-sm transition-colors ${stateClass}">
+            <span class="truncate">${m}</span>
+            ${isAssigned 
+              ? `<span class="text-xs px-2 py-0.5 rounded bg-zinc-800 text-zinc-500 border border-zinc-700/60 shrink-0">Assigned</span>`
+              : `<span class="text-xs px-2 py-0.5 rounded bg-emerald-500/10 text-emerald-400 border border-emerald-500/20 shrink-0">Available</span>`
+            }
+          </button>
+        `;
+      };
+
+      let html = '';
+      if (unassigned.length > 0) {
+        html += `<div class="px-2.5 py-1 text-xs font-semibold uppercase tracking-wider text-zinc-500">Available (${unassigned.length})</div>`;
+        html += unassigned.map(m => renderItem(m, false)).join('');
+      }
+      if (assigned.length > 0) {
+        html += `<div class="px-2.5 py-1 mt-1.5 text-xs font-semibold uppercase tracking-wider text-zinc-500">Already Assigned (${assigned.length})</div>`;
+        html += assigned.map(m => renderItem(m, true)).join('');
+      }
+      listEl.innerHTML = html;
+
+      const activeBtn = listEl.querySelector(`button[data-option-idx="${popoverFocusIdx}"]`);
+      if (activeBtn) activeBtn.scrollIntoView({ block: 'nearest' });
+    }
+
+    function setPopoverFocus(idx) {
+      if (popoverFocusIdx === idx) return;
+      popoverFocusIdx = idx;
+      renderPopoverOptions(false);
+    }
+
+    function handlePopoverKey(e) {
+      e.stopPropagation();
+      const buttons = document.querySelectorAll('#memberPopoverList button');
+      if (!buttons.length && e.key !== 'Escape') return;
+
+      if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        popoverFocusIdx = (popoverFocusIdx + 1) % buttons.length;
+        renderPopoverOptions(false);
+      } else if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        popoverFocusIdx = (popoverFocusIdx - 1 + buttons.length) % buttons.length;
+        renderPopoverOptions(false);
+      } else if (e.key === 'Enter') {
+        e.preventDefault();
+        const targetBtn = buttons[popoverFocusIdx] || buttons[0];
+        if (targetBtn) targetBtn.click();
+      } else if (e.key === 'Escape') {
+        e.preventDefault();
+        closeMemberPopover(true);
+      }
+    }
+
+    function selectMemberFromPopover(memberName) {
+      if (activeRowIdx === null) return;
+      const editedRow = activeRowIdx;
+      extractedRows[editedRow].ign = memberName;
+      extractedRows[editedRow].lowConf = false;
+      closeMemberPopover(false);
+      renderTable();
+      checkMissingMembers();
+      focusCell(editedRow, 'member');
+    }
+
+    function clearMember(idx, e) {
+      e.stopPropagation();
+      extractedRows[idx].ign = '';
+      extractedRows[idx].lowConf = true;
+      renderTable();
+      checkMissingMembers();
+      focusCell(idx, 'member');
+    }
+
+    function renderTable() {
+      const tbody = document.getElementById('resultBody');
+
+      tbody.innerHTML = extractedRows.map((row, idx) => {
+        const isDuplicate = row.ign && extractedRows.filter(r => r.ign === row.ign).length > 1;
+        const isHighlighted = highlightedRowIdx === idx;
+        
+        const rowBg = isHighlighted
+          ? 'bg-purple-500/20 ring-1 ring-inset ring-purple-400/60'
+          : (row.statError || isDuplicate
+            ? 'bg-rose-500/10' 
+            : (row.lowConf || !row.ign ? 'bg-amber-500/10' : 'hover:bg-zinc-900/80'));
+
+        const badgeClass = !row.ign
+          ? 'border-amber-500/50 bg-amber-500/10 text-amber-300'
+          : (isDuplicate
+            ? 'border-rose-500/50 bg-rose-500/10 text-rose-300'
+            : (row.lowConf
+              ? 'border-amber-500/40 bg-zinc-950 text-amber-200'
+              : 'border-zinc-700/80 bg-zinc-950 text-emerald-300'));
+
+        return `
+        <tr data-row-idx="${idx}" onclick="onRowClick(${idx}, event)" class="${rowBg} transition-colors cursor-pointer">
+          <td class="py-2 px-3 text-zinc-500 font-mono">${idx + 1}</td>
+          <td class="py-1.5 px-3">
+            <button type="button" data-row="${idx}" data-col="nameImg"
+              onfocus="setHighlightedRow(${idx})"
+              onclick="openFullImageWindow(${row.imgIndex}, ${row.rowInImg}, ${idx})"
+              title="Click or press Enter to view full screenshot"
+              class="block rounded-lg p-0.5 border border-transparent focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all">
+              <img src="${row.previewNameImg}" class="h-10 rounded border border-zinc-700/80 hover:border-amber-400 cursor-zoom-in object-contain bg-zinc-200" alt="name crop">
+            </button>
+          </td>
+          <td class="py-2 px-3 text-xs text-zinc-400 font-mono truncate max-w-[125px]" title="${row.rawName}">${row.rawName || '—'}</td>
+          <td class="py-1.5 px-3">
+            <button type="button" data-row="${idx}" data-col="member"
+              onfocus="setHighlightedRow(${idx})"
+              onclick="openMemberPopover(${idx}, this)"
+              class="w-full flex items-center justify-between gap-2 px-3 py-1.5 rounded-lg border ${badgeClass} hover:border-amber-400/70 focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all text-left">
+              <span class="truncate font-medium">${row.ign || 'Select member...'}</span>
+              <div class="flex items-center gap-1.5 shrink-0">
+                ${row.ign ? `<span onclick="clearMember(${idx}, event)" title="Clear" class="text-zinc-500 hover:text-rose-400 px-1 rounded">✕</span>` : ''}
+                <svg class="w-4 h-4 text-zinc-500" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 9l4-4 4 4m0 6l-4 4-4-4"/></svg>
+              </div>
+            </button>
+          </td>
+          <td class="py-1.5 px-3">
+            <input type="number" data-row="${idx}" data-col="val1" value="${row.val1}" min="0" max="5"
+              onfocus="setHighlightedRow(${idx}); this.select();"
+              onchange="extractedRows[${idx}].val1 = Number(this.value); extractedRows[${idx}].statError = false; updateRowHighlights();"
+              class="w-full bg-zinc-950 border ${row.statError ? 'border-rose-500 text-rose-400 font-bold' : 'border-zinc-800'} focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 rounded-lg px-3 py-1.5 font-mono text-sm text-zinc-100 transition-all">
+          </td>
+          <td class="py-1.5 px-3">
+            <input type="number" data-row="${idx}" data-col="val2" value="${row.val2}" min="0" max="5"
+              onfocus="setHighlightedRow(${idx}); this.select();"
+              onchange="extractedRows[${idx}].val2 = Number(this.value); extractedRows[${idx}].statError = false; updateRowHighlights();"
+              class="w-full bg-zinc-950 border ${row.statError ? 'border-rose-500 text-rose-400 font-bold' : 'border-zinc-800'} focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 rounded-lg px-3 py-1.5 font-mono text-sm text-zinc-100 transition-all">
+          </td>
+          <td class="py-1.5 px-3">
+            <button type="button" data-row="${idx}" data-col="scoreImg"
+              onfocus="setHighlightedRow(${idx})"
+              onclick="openFullImageWindow(${row.imgIndex}, ${row.rowInImg}, ${idx})"
+              title="Click or press Enter to view full screenshot"
+              class="block rounded-lg p-0.5 border border-transparent focus:outline-none focus:ring-2 focus:ring-purple-400 focus:border-purple-400 transition-all">
+              <img src="${row.previewScoreImg}" class="h-10 rounded border border-zinc-700/80 hover:border-amber-400 cursor-zoom-in object-contain bg-zinc-200" alt="score crop">
+            </button>
+          </td>
+        </tr>
+      `}).join('');
+    }
+
+    function checkMissingMembers() {
+      const validIgnList = extractedRows.map(r => r.ign).filter(Boolean);
+      const foundSet = new Set(validIgnList);
+      const duplicates = validIgnList.filter((item, index) => validIgnList.indexOf(item) !== index);
+      const missing = roster.filter(m => !foundSet.has(m));
+      const alertEl = document.getElementById('missingAlert');
+
+      if (duplicates.length > 0) {
+        alertEl.textContent = `❌ Duplicate member: ${[...new Set(duplicates)].join(', ')}`;
+        alertEl.className = 'text-sm text-rose-400 font-medium';
+      } else if (missing.length > 0) {
+        alertEl.textContent = `⚠️ Missing ${missing.length} members: ${missing.slice(0, 4).join(', ')}${missing.length > 4 ? '...' : ''}`;
+        alertEl.className = 'text-sm text-amber-400 font-medium';
+      } else {
+        alertEl.textContent = '✅ All 30 members matched with zero duplicates';
+        alertEl.className = 'text-sm text-emerald-400 font-medium';
+      }
+    }
+
+    function submitToSheet() {
+      const btn = document.getElementById('saveBtn');
+      btn.disabled = true;
+      btn.innerHTML = `<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Saving...`;
+
+      const validRecords = extractedRows.filter(r => r.ign !== '');
+
+      const payload = {
+        season: document.getElementById('warSeason').value,
+        round: document.getElementById('warRound').value,
+        sweepAll: document.getElementById('sweepAll').checked,
+        enemyGuild: document.getElementById('enemyGuild').value,
+        ourScore: document.getElementById('ourScore').value,
+        enemyScore: document.getElementById('enemyScore').value,
+        records: validRecords.map(r => ({ ign: r.ign, win: r.val1, lose: Number(r.val2) }))
+      };
+
+      google.script.run
+        .withSuccessHandler(msg => {
+          alert(msg);
+          if (google.script.host) google.script.host.close();
+        })
+        .withFailureHandler(err => {
+          alert('Error: ' + err.message);
+          btn.disabled = false;
+          btn.textContent = 'Save to Google Sheet';
+        })
+        .saveGuildWarData(payload);
+    }
+  </script>
+</body>
+</html>
