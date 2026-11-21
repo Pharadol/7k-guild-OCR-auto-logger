@@ -20,34 +20,181 @@
         }
       }
     }
+    // Apply theme immediately before render
+    (function() {
+      try {
+        const saved = localStorage.getItem('xforces_theme');
+        if (saved === 'light') {
+          document.documentElement.classList.remove('dark');
+        } else {
+          document.documentElement.classList.add('dark');
+        }
+      } catch (e) {}
+    })();
   </script>
   <style>
+    html, body {
+      margin: 0;
+      padding: 0;
+      width: 100%;
+      min-height: 100%;
+      box-sizing: border-box;
+      transition: background-color 0.15s ease, color 0.15s ease;
+    }
+    *, *:before, *:after {
+      box-sizing: inherit;
+    }
+    html.dark, html.dark body {
+      background-color: #09090b !important;
+      color: #f4f4f5 !important;
+    }
+
+    /* Scrollbar */
     ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: #09090b; }
-    ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 9999px; }
-    ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+    html.dark ::-webkit-scrollbar-track { background: #09090b; }
+    html.dark ::-webkit-scrollbar-thumb { background: #3f3f46; border-radius: 9999px; }
+    html.dark ::-webkit-scrollbar-thumb:hover { background: #52525b; }
+
+    /* Light Theme (matches Google Sheets modal) */
+    html:not(.dark), html:not(.dark) body {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+    }
+    html:not(.dark) ::-webkit-scrollbar-track { background: #f8fafc; }
+    html:not(.dark) ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 9999px; }
+    html:not(.dark) ::-webkit-scrollbar-thumb:hover { background: #94a3b8; }
+
+    /* Surface & Background overrides in Light Mode */
+    html:not(.dark) .bg-zinc-950 { background-color: #ffffff !important; }
+    html:not(.dark) .bg-zinc-900\/70,
+    html:not(.dark) .bg-zinc-900\/40,
+    html:not(.dark) .bg-zinc-900\/30,
+    html:not(.dark) .bg-zinc-900\/95,
+    html:not(.dark) .bg-zinc-900 { background-color: #f8fafc !important; }
+    html:not(.dark) .bg-zinc-800,
+    html:not(.dark) .bg-zinc-800\/80,
+    html:not(.dark) .bg-zinc-800\/90 { background-color: #f1f5f9 !important; }
+
+    /* Border overrides in Light Mode */
+    html:not(.dark) .border-zinc-800,
+    html:not(.dark) .border-zinc-800\/90,
+    html:not(.dark) .border-zinc-800\/80,
+    html:not(.dark) .border-zinc-700,
+    html:not(.dark) .border-zinc-700\/80,
+    html:not(.dark) .border-zinc-700\/60 { border-color: #e2e8f0 !important; }
+    html:not(.dark) .divide-zinc-800\/60 > * + * { border-color: #f1f5f9 !important; }
+
+    /* Text overrides in Light Mode */
+    html:not(.dark) .text-zinc-100,
+    html:not(.dark) .text-zinc-200 { color: #0f172a !important; }
+    html:not(.dark) .text-zinc-300,
+    html:not(.dark) .text-zinc-400 { color: #334155 !important; }
+    html:not(.dark) .text-zinc-500 { color: #64748b !important; }
+    html:not(.dark) .text-zinc-600 { color: #94a3b8 !important; }
+
+    /* High-contrast status colors for Light Mode */
+    html:not(.dark) .text-amber-200,
+    html:not(.dark) .text-amber-300 { color: #b45309 !important; }
+    html:not(.dark) .text-emerald-300,
+    html:not(.dark) .text-emerald-400 { color: #047857 !important; }
+    html:not(.dark) .text-rose-300,
+    html:not(.dark) .text-rose-400 { color: #be123c !important; }
+    html:not(.dark) .text-sky-400 { color: #0369a1 !important; }
+
+    /* Table & Dropzone in Light Mode */
+    html:not(.dark) thead { background-color: #f1f5f9 !important; border-color: #e2e8f0 !important; }
+    html:not(.dark) thead th { color: #475569 !important; }
+    html:not(.dark) #dropZone { background-color: #f8fafc !important; border-color: #cbd5e1 !important; }
+    html:not(.dark) #dropZone:hover { background-color: #f1f5f9 !important; border-color: #f59e0b !important; }
+    html:not(.dark) tr:hover:not(.bg-purple-500\/20):not(.bg-rose-500\/10):not(.bg-amber-500\/10) { background-color: #f8fafc !important; }
+
+    /* Inputs in Light Mode */
+    html:not(.dark) input:not([type="checkbox"]),
+    html:not(.dark) select {
+      background-color: #ffffff !important;
+      color: #0f172a !important;
+      border-color: #cbd5e1 !important;
+    }
+    html:not(.dark) input::placeholder { color: #94a3b8 !important; }
+
+    /* Popover in Light Mode */
+    html:not(.dark) #memberPopover {
+      background-color: #ffffff !important;
+      border-color: #c084fc !important;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1), 0 8px 10px -6px rgba(0,0,0,0.1) !important;
+    }
+    html:not(.dark) #memberPopover .bg-zinc-950\/60 { background-color: #f8fafc !important; border-color: #e2e8f0 !important; }
+    html:not(.dark) #memberPopover button { color: #1e293b !important; }
+    html:not(.dark) #memberPopover button:hover { background-color: #f1f5f9 !important; }
+
+    /* Sweep All Toggle Switch in Light Mode */
+    #sweepToggleTrack {
+      transition: background-color 0.2s, border-color 0.2s;
+    }
+    html:not(.dark) #sweepToggleTrack {
+      background-color: #cbd5e1 !important; /* slate-300: clearly visible track */
+      border: 1px solid #94a3b8 !important; /* slate-400 border */
+    }
+    html:not(.dark) #sweepToggleTrack:after {
+      background-color: #ffffff !important; /* crisp white knob */
+      box-shadow: 0 1px 3px rgba(0, 0, 0, 0.25) !important;
+    }
+    html:not(.dark) input#sweepAll:checked + #sweepToggleTrack {
+      background-color: #f59e0b !important; /* vibrant amber-500 */
+      border-color: #d97706 !important; /* amber-600 */
+    }
+    html:not(.dark) input#sweepAll:checked + #sweepToggleTrack:after {
+      background-color: #ffffff !important;
+    }
+
+    /* Save Button in Light Mode */
+    html:not(.dark) #saveBtn:not(:disabled) {
+      color: #ffffff !important;
+      background-color: #059669 !important; /* emerald-600 */
+    }
+    html:not(.dark) #saveBtn:not(:disabled):hover {
+      background-color: #10b981 !important; /* emerald-500 */
+    }
+    html:not(.dark) #saveBtn:not(:disabled) svg {
+      stroke: #ffffff !important;
+    }
+    html:not(.dark) #saveBtn:disabled {
+      background-color: #e2e8f0 !important;
+      color: #94a3b8 !important;
+    }
+    html:not(.dark) #saveBtn:disabled svg {
+      stroke: #94a3b8 !important;
+    }
   </style>
 </head>
-<body class="bg-zinc-950 text-zinc-100 p-4 font-sans text-base antialiased selection:bg-amber-500/30 selection:text-amber-200 max-w-[1440px] mx-auto">
+<body class="bg-zinc-950 text-zinc-100 p-3.5 font-sans text-base antialiased selection:bg-amber-500/30 selection:text-amber-200 w-full">
 
-  <!-- Top Header -->
-  <div class="flex items-center justify-between mb-3">
-    <div class="flex items-center gap-3">
-      <span class="text-4xl font-black text-white select-none leading-none pr-1" style="font-family: 'Cinzel Decorative', serif; text-shadow: 0 0 10px rgba(255,255,255,0.9), 0 0 24px rgba(255,255,255,0.45);">
-        X
+  <!-- Compact Sub-header: Status, Keyboard Workflow & Theme Toggle -->
+  <div class="flex items-center justify-between pb-2 mb-2.5 border-b border-zinc-800/80 text-xs">
+    <div class="flex items-center gap-2">
+      <span class="inline-flex items-center gap-1.5 px-2 py-0.5 rounded text-[11px] font-semibold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+        <svg class="w-3 h-3" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/>
+        </svg>
+        Guild War Logger
       </span>
-      <div>
-        <div class="flex items-center gap-2">
-          <h1 class="text-base font-bold tracking-tight text-zinc-100">XForces Guild War Logger</h1>
-          <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-xs font-semibold bg-amber-500/15 text-amber-400 border border-amber-500/30">
-            <svg class="w-3.5 h-3.5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <polyline points="14.5 17.5 3 6 3 3 6 3 17.5 14.5"/><line x1="13" y1="19" x2="19" y2="13"/><line x1="16" y1="16" x2="20" y2="20"/><line x1="19" y1="21" x2="21" y2="19"/><polyline points="14.5 6.5 18 3 21 3 21 6 17.5 9.5"/><line x1="5" y1="14" x2="9" y2="18"/><line x1="7" y1="17" x2="4" y2="20"/><line x1="3" y1="19" x2="5" y2="21"/>
-            </svg>
-            Guild War
-          </span>
-        </div>
-        <p class="text-xs text-zinc-400">Keyboard-ready workflow: <kbd class="px-1.5 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-[10px] text-zinc-300">Tab</kbd> <kbd class="px-1.5 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-[10px] text-zinc-300">←↑↓→</kbd> <kbd class="px-1.5 py-0.5 bg-zinc-800 border border-zinc-700 rounded text-[10px] text-zinc-300">Enter</kbd></p>
+      <span class="text-zinc-500">•</span>
+      <span class="text-zinc-400 text-[11px]">Client-Side OCR (Tesseract.js v5)</span>
+    </div>
+    <div class="flex items-center gap-3">
+      <div class="flex items-center gap-1.5 text-zinc-400 text-[11px]">
+        <span class="text-zinc-500">Shortcuts:</span>
+        <kbd class="px-1.5 py-0.5 bg-zinc-900 border border-zinc-700/80 rounded text-[10px] text-zinc-300 font-mono">Tab</kbd>
+        <kbd class="px-1.5 py-0.5 bg-zinc-900 border border-zinc-700/80 rounded text-[10px] text-zinc-300 font-mono">←↑↓→</kbd>
+        <kbd class="px-1.5 py-0.5 bg-zinc-900 border border-zinc-700/80 rounded text-[10px] text-zinc-300 font-mono">Enter</kbd>
       </div>
+
+      <!-- Theme Toggle Button -->
+      <button type="button" id="themeToggleBtn" onclick="toggleTheme()" title="Switch Light / Dark Theme"
+        class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg border border-zinc-700/80 hover:border-amber-400/80 bg-zinc-900 hover:bg-zinc-800 text-zinc-300 hover:text-amber-300 text-xs font-medium transition-all shadow-sm cursor-pointer select-none">
+        <span id="themeIcon">🌙</span>
+        <span id="themeLabel">Dark</span>
+      </button>
     </div>
   </div>
 
@@ -66,7 +213,7 @@
         <label class="flex items-center gap-3 cursor-pointer select-none group">
           <div class="relative flex items-center">
             <input type="checkbox" id="sweepAll" onchange="onSweepToggle(this.checked)" class="peer sr-only">
-            <div class="w-11 h-6 bg-zinc-800 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-400 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500 peer-checked:after:bg-zinc-950"></div>
+            <div id="sweepToggleTrack" class="w-11 h-6 bg-zinc-800 border border-zinc-700 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-zinc-400 after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-amber-500 peer-checked:after:bg-zinc-950"></div>
           </div>
           <div>
             <span class="text-sm font-medium text-zinc-200 group-hover:text-white transition-colors">Sweep All Flag</span>
@@ -159,6 +306,39 @@
   </div>
 
   <script>
+    function initTheme() {
+      let isDark = true;
+      try {
+        const saved = localStorage.getItem('xforces_theme');
+        if (saved) isDark = saved === 'dark';
+      } catch (e) {}
+      applyTheme(isDark);
+    }
+
+    function toggleTheme() {
+      const isDark = !document.documentElement.classList.contains('dark');
+      applyTheme(isDark);
+      try {
+        localStorage.setItem('xforces_theme', isDark ? 'dark' : 'light');
+      } catch (e) {}
+    }
+
+    function applyTheme(isDark) {
+      const icon = document.getElementById('themeIcon');
+      const label = document.getElementById('themeLabel');
+      if (isDark) {
+        document.documentElement.classList.add('dark');
+        if (icon) icon.textContent = '🌙';
+        if (label) label.textContent = 'Dark';
+      } else {
+        document.documentElement.classList.remove('dark');
+        if (icon) icon.textContent = '☀️';
+        if (label) label.textContent = 'Light';
+      }
+    }
+
+    initTheme();
+
     let roster = [];
     let searchableRoster = [];
     let extractedRows = [];
