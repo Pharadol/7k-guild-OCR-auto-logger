@@ -33,7 +33,10 @@ function saveGuildWarData(payload) {
   const sheet = ss.getSheetByName(payload.season);
   if (!sheet) throw new Error('Sheet not found: ' + payload.season);
 
-  const roundNum = Math.min(18, Math.max(1, Number(payload.round) || 1));
+  const roundNum = Number(payload.round);
+  if (!roundNum || roundNum < 1 || roundNum > 18) {
+    throw new Error('กรุณาระบุ War Round ให้ถูกต้อง (1-18)');
+  }
   const roundIdx = roundNum - 1;
   const winCol = 2 + (roundIdx * 2);  // Round 1 = Col B (2)
   const loseCol = 3 + (roundIdx * 2); // Round 1 = Col C (3)
