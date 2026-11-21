@@ -12,3 +12,9 @@ A modular, keyboard-first **Google Apps Script** add-on embedded directly inside
 
 ## 2. Modular File Structure
 Decoupled into independent modules so **Guild War** can be deployed standalone to guild leaders without exposing **Expedition Boss** features:
+
+```text
+├── Code.gs                     # Main entry point (onOpen menu builder with dynamic module detection)
+├── GuildWarScript.gs           # Backend Sheet read/write logic for Guild War
+├── GuildWar.html               # Frontend OCR & verification UI for Guild War
+└── spec.md                     # System specification & Sheet mapping documentation
