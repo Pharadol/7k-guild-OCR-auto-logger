@@ -17,4 +17,6 @@ Decoupled into independent modules so **Guild War** can be deployed standalone t
 ├── Code.gs                     # Main entry point (onOpen menu builder with dynamic module detection)
 ├── GuildWarScript.gs           # Backend Sheet read/write logic for Guild War
 ├── GuildWar.html               # Frontend OCR & verification UI for Guild War
+├── ExpeditionBossScript.gs     # Backend Sheet read/write logic for Expedition Boss
+├── ExpeditionBoss.html         # Frontend OCR & verification UI for Expedition Boss
 └── spec.md                     # System specification & Sheet mapping documentation

@@ -4,6 +4,9 @@ function onOpen() {
   if (typeof openGuildWarModal === 'function') {
     menu.addItem('⚔️ Upload Guild War', 'openGuildWarModal');
   }
+  if (typeof openBossModal === 'function') {
+    menu.addItem('👹 Upload Expedition Boss', 'openBossModal');
+  }
 
   menu.addToUi();
 }
