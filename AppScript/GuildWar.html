@@ -206,8 +206,10 @@
         <select id="warSeason" class="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-amber-500/60 focus:outline-none rounded-lg px-3 py-1.5 text-sm text-zinc-100 transition-colors"></select>
       </div>
       <div class="col-span-3">
-        <label class="block text-xs font-medium text-zinc-400 mb-1">War Round</label>
-        <select id="warRound" class="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-amber-500/60 focus:outline-none rounded-lg px-3 py-1.5 text-sm font-semibold text-sky-400 transition-colors"></select>
+        <label class="block text-xs font-medium text-zinc-400 mb-1">War Round <span class="text-rose-400 font-bold">*</span></label>
+        <select id="warRound" required onchange="this.classList.remove('ring-2', 'ring-rose-500', 'border-rose-500')" class="w-full bg-zinc-950 border border-zinc-800 hover:border-zinc-700 focus:border-amber-500/60 focus:outline-none rounded-lg px-3 py-1.5 text-sm font-semibold text-sky-400 transition-colors">
+          <option value="" disabled selected class="text-zinc-500 font-normal">-- Select Round --</option>
+        </select>
       </div>
       <div class="col-span-6 flex items-end pb-1">
         <label class="flex items-center gap-3 cursor-pointer select-none group">
@@ -350,6 +352,7 @@
     const COL_ORDER = ['nameImg', 'member', 'val1', 'val2', 'scoreImg'];
 
     const roundSel = document.getElementById('warRound');
+    roundSel.innerHTML = '<option value="" disabled selected class="text-zinc-500 font-normal">-- Select Round --</option>';
     for (let i = 1; i <= 18; i++) {
       const opt = document.createElement('option');
       opt.value = i;
@@ -514,11 +517,15 @@
     google.script.run.withSuccessHandler(cfg => {
       roster = cfg.members || [];
       const seasonSel = document.getElementById('warSeason');
+      seasonSel.innerHTML = '';
       cfg.seasons.forEach(s => {
         const opt = document.createElement('option');
         opt.value = s; opt.textContent = s;
         seasonSel.appendChild(opt);
       });
+      if (cfg.seasons && cfg.seasons.length > 0) {
+        seasonSel.value = cfg.seasons[cfg.seasons.length - 1];
+      }
       searchableRoster = roster.map(full => ({
         full,
         clean: full.replace(/\s*\(.*?\)\s*/g, '').trim()
@@ -945,6 +952,15 @@
     }
 
     function submitToSheet() {
+      const roundSel = document.getElementById('warRound');
+      const roundVal = roundSel.value;
+      if (!roundVal) {
+        alert('⚠️ กรุณาเลือก War Round ก่อนบันทึกข้อมูล');
+        roundSel.focus();
+        roundSel.classList.add('ring-2', 'ring-rose-500', 'border-rose-500');
+        return;
+      }
+
       const btn = document.getElementById('saveBtn');
       btn.disabled = true;
       btn.innerHTML = `<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Saving...`;
@@ -953,7 +969,7 @@
 
       const payload = {
         season: document.getElementById('warSeason').value,
-        round: document.getElementById('warRound').value,
+        round: roundVal,
         sweepAll: document.getElementById('sweepAll').checked,
         enemyGuild: document.getElementById('enemyGuild').value,
         ourScore: document.getElementById('ourScore').value,
