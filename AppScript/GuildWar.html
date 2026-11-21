@@ -165,6 +165,51 @@
     html:not(.dark) #saveBtn:disabled svg {
       stroke: #94a3b8 !important;
     }
+
+    /* Custom Dialog in Light Mode */
+    html:not(.dark) #customDialogOverlay {
+      background-color: rgba(15, 23, 42, 0.45) !important;
+    }
+    html:not(.dark) #customDialogContainer {
+      background-color: #ffffff !important;
+      border-color: #e2e8f0 !important;
+      color: #0f172a !important;
+      box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04) !important;
+    }
+    html:not(.dark) #dialogTitle {
+      color: #0f172a !important;
+    }
+    html:not(.dark) #dialogMessage {
+      color: #64748b !important;
+    }
+    html:not(.dark) #dialogIssueList {
+      background-color: #f8fafc !important;
+      border-color: #e2e8f0 !important;
+      color: #334155 !important;
+    }
+    html:not(.dark) .dialog-btn-cancel {
+      background-color: #f1f5f9 !important;
+      border-color: #cbd5e1 !important;
+      color: #475569 !important;
+    }
+    html:not(.dark) .dialog-btn-cancel:hover {
+      background-color: #e2e8f0 !important;
+      color: #0f172a !important;
+    }
+    html:not(.dark) .dialog-btn-confirm {
+      background-color: #f59e0b !important;
+      color: #ffffff !important;
+    }
+    html:not(.dark) .dialog-btn-confirm:hover {
+      background-color: #d97706 !important;
+    }
+    html:not(.dark) .dialog-btn-success {
+      background-color: #059669 !important;
+      color: #ffffff !important;
+    }
+    html:not(.dark) .dialog-btn-success:hover {
+      background-color: #047857 !important;
+    }
   </style>
 </head>
 <body class="bg-zinc-950 text-zinc-100 p-3.5 font-sans text-base antialiased selection:bg-amber-500/30 selection:text-amber-200 w-full">
@@ -298,6 +343,23 @@
     </button>
   </div>
 
+  <!-- Custom Alert / Confirm / Success Modal Dialog -->
+  <div id="customDialogOverlay" onclick="if(event.target === this) closeCustomDialog()" class="hidden fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm transition-opacity">
+    <div id="customDialogContainer" class="w-full max-w-md bg-zinc-900 border border-zinc-700/80 rounded-2xl shadow-2xl p-5 text-zinc-100 transition-all scale-100">
+      <div class="flex items-start gap-3.5 mb-2.5">
+        <div id="dialogIconBox" class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0"></div>
+        <div class="flex-1 min-w-0">
+          <h3 id="dialogTitle" class="text-base font-bold tracking-tight text-zinc-100"></h3>
+          <p id="dialogMessage" class="text-xs text-zinc-400 mt-1 leading-relaxed"></p>
+        </div>
+      </div>
+
+      <div id="dialogIssueList" class="hidden my-3 p-3 rounded-xl bg-zinc-950/80 border border-zinc-800 text-xs space-y-1.5"></div>
+
+      <div id="dialogActions" class="flex items-center justify-end gap-2.5 mt-4 pt-1"></div>
+    </div>
+  </div>
+
   <!-- Floating Modern Searchable Combobox Popover -->
   <div id="memberPopover" class="hidden fixed z-50 w-80 bg-zinc-900 border border-purple-400/60 rounded-xl shadow-2xl shadow-black/90 overflow-hidden">
     <div class="p-2.5 border-b border-zinc-800 flex items-center gap-2 bg-zinc-950/60">
@@ -340,6 +402,122 @@
     }
 
     initTheme();
+
+    let dialogCallback = null;
+
+    function closeCustomDialog() {
+      const overlay = document.getElementById('customDialogOverlay');
+      if (overlay) overlay.classList.add('hidden');
+      dialogCallback = null;
+    }
+
+    function showCustomConfirm({ title, message, issues = [], confirmText = 'Confirm', cancelText = 'Cancel', onConfirm }) {
+      const overlay = document.getElementById('customDialogOverlay');
+      const iconBox = document.getElementById('dialogIconBox');
+      const titleEl = document.getElementById('dialogTitle');
+      const msgEl = document.getElementById('dialogMessage');
+      const issueListEl = document.getElementById('dialogIssueList');
+      const actionsEl = document.getElementById('dialogActions');
+
+      dialogCallback = onConfirm;
+
+      iconBox.className = 'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-amber-500/15 border border-amber-500/30 text-amber-400';
+      iconBox.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+        </svg>
+      `;
+
+      titleEl.textContent = title;
+      msgEl.textContent = message;
+
+      if (issues && issues.length > 0) {
+        issueListEl.classList.remove('hidden');
+        issueListEl.innerHTML = issues.map(iss => `<div class="flex items-start gap-1.5 leading-snug">${iss}</div>`).join('');
+      } else {
+        issueListEl.classList.add('hidden');
+      }
+
+      actionsEl.innerHTML = `
+        <button type="button" onclick="closeCustomDialog()" class="dialog-btn-cancel px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-300 text-xs font-semibold border border-zinc-700 transition-colors cursor-pointer">
+          ${cancelText}
+        </button>
+        <button type="button" onclick="if(dialogCallback) { const cb = dialogCallback; closeCustomDialog(); cb(); }" class="dialog-btn-confirm px-4 py-2 rounded-lg bg-amber-500 hover:bg-amber-400 text-zinc-950 text-xs font-bold shadow-md shadow-amber-500/10 transition-colors cursor-pointer">
+          ${confirmText}
+        </button>
+      `;
+
+      overlay.classList.remove('hidden');
+    }
+
+    function showCustomSuccess({ title, message, onClose }) {
+      const overlay = document.getElementById('customDialogOverlay');
+      const iconBox = document.getElementById('dialogIconBox');
+      const titleEl = document.getElementById('dialogTitle');
+      const msgEl = document.getElementById('dialogMessage');
+      const issueListEl = document.getElementById('dialogIssueList');
+      const actionsEl = document.getElementById('dialogActions');
+
+      dialogCallback = onClose;
+
+      iconBox.className = 'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-emerald-500/15 border border-emerald-500/30 text-emerald-400';
+      iconBox.innerHTML = `
+        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/>
+        </svg>
+      `;
+
+      titleEl.textContent = title;
+      msgEl.innerHTML = `<span class="text-emerald-400 font-semibold block mb-1 text-sm">${message}</span><span class="text-zinc-400 text-xs">Scores and battle records have been synchronized with your spreadsheet.</span>`;
+      issueListEl.classList.add('hidden');
+
+      actionsEl.innerHTML = `
+        <button type="button" onclick="if(dialogCallback) { const cb = dialogCallback; closeCustomDialog(); cb(); } else { closeCustomDialog(); }" class="dialog-btn-success px-5 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-zinc-950 text-xs font-bold shadow-lg shadow-emerald-500/15 transition-colors cursor-pointer">
+          Done (Close Window)
+        </button>
+      `;
+
+      overlay.classList.remove('hidden');
+    }
+
+    function showCustomAlert({ type = 'warning', title, message, onClose }) {
+      const overlay = document.getElementById('customDialogOverlay');
+      const iconBox = document.getElementById('dialogIconBox');
+      const titleEl = document.getElementById('dialogTitle');
+      const msgEl = document.getElementById('dialogMessage');
+      const issueListEl = document.getElementById('dialogIssueList');
+      const actionsEl = document.getElementById('dialogActions');
+
+      dialogCallback = onClose;
+
+      if (type === 'error') {
+        iconBox.className = 'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-rose-500/15 border border-rose-500/30 text-rose-400';
+        iconBox.innerHTML = `
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/>
+          </svg>
+        `;
+      } else {
+        iconBox.className = 'w-10 h-10 rounded-xl flex items-center justify-center shrink-0 bg-amber-500/15 border border-amber-500/30 text-amber-400';
+        iconBox.innerHTML = `
+          <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"/>
+          </svg>
+        `;
+      }
+
+      titleEl.textContent = title;
+      msgEl.textContent = message;
+      issueListEl.classList.add('hidden');
+
+      actionsEl.innerHTML = `
+        <button type="button" onclick="if(dialogCallback) { const cb = dialogCallback; closeCustomDialog(); cb(); } else { closeCustomDialog(); }" class="px-4 py-2 rounded-lg bg-zinc-800 hover:bg-zinc-700 text-zinc-200 text-xs font-semibold border border-zinc-700 transition-colors cursor-pointer">
+          OK
+        </button>
+      `;
+
+      overlay.classList.remove('hidden');
+    }
 
     let roster = [];
     let searchableRoster = [];
@@ -384,6 +562,15 @@
     });
 
     document.addEventListener('keydown', e => {
+      const dialogOverlay = document.getElementById('customDialogOverlay');
+      if (dialogOverlay && !dialogOverlay.classList.contains('hidden')) {
+        if (e.key === 'Escape') {
+          e.preventDefault();
+          closeCustomDialog();
+        }
+        return;
+      }
+
       const popover = document.getElementById('memberPopover');
       if (!popover.classList.contains('hidden')) {
         if (['ArrowDown', 'ArrowUp', 'Enter', 'Escape'].includes(e.key)) {
@@ -955,12 +1142,48 @@
       const roundSel = document.getElementById('warRound');
       const roundVal = roundSel.value;
       if (!roundVal) {
-        alert('⚠️ กรุณาเลือก War Round ก่อนบันทึกข้อมูล');
-        roundSel.focus();
-        roundSel.classList.add('ring-2', 'ring-rose-500', 'border-rose-500');
+        showCustomAlert({
+          type: 'warning',
+          title: 'War Round Required',
+          message: 'Please select a War Round (1–18) before saving scores to Google Sheet.',
+          onClose: () => {
+            roundSel.focus();
+            roundSel.classList.add('ring-2', 'ring-rose-500', 'border-rose-500');
+          }
+        });
         return;
       }
 
+      // Check if any member has unassigned IGN or if any WIN/LOSE cell is marked red (statError)
+      const unassigned = extractedRows.filter(r => !r.ign);
+      const statErrors = extractedRows.filter(r => r.statError);
+
+      if (unassigned.length > 0 || statErrors.length > 0) {
+        const issues = [];
+        if (unassigned.length > 0) {
+          const rowsStr = unassigned.map(r => `#${extractedRows.indexOf(r) + 1}`).slice(0, 8).join(', ');
+          issues.push(`⚠️ Unassigned Member IGN: <b>${unassigned.length}</b> rows (Row: ${rowsStr}${unassigned.length > 8 ? '...' : ''})`);
+        }
+        if (statErrors.length > 0) {
+          const rowsStr = statErrors.map(r => `#${extractedRows.indexOf(r) + 1}`).slice(0, 8).join(', ');
+          issues.push(`❌ Invalid WIN / LOSE (Red highlight): <b>${statErrors.length}</b> rows (Row: ${rowsStr}${statErrors.length > 8 ? '...' : ''})`);
+        }
+
+        showCustomConfirm({
+          title: 'Confirm Save to Spreadsheet?',
+          message: 'Some rows have unassigned member names or highlighted stat errors. If you proceed, only rows with valid member IGNs will be recorded.',
+          issues: issues,
+          confirmText: 'Save Anyway',
+          cancelText: 'Review & Edit',
+          onConfirm: () => executeSave(roundVal)
+        });
+        return;
+      }
+
+      executeSave(roundVal);
+    }
+
+    function executeSave(roundVal) {
       const btn = document.getElementById('saveBtn');
       btn.disabled = true;
       btn.innerHTML = `<svg class="animate-spin w-4 h-4" fill="none" viewBox="0 0 24 24"><circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle><path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8H4z"></path></svg> Saving...`;
@@ -979,13 +1202,24 @@
 
       google.script.run
         .withSuccessHandler(msg => {
-          alert(msg);
-          if (google.script.host) google.script.host.close();
+          btn.disabled = false;
+          btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save to Google Sheet`;
+          showCustomSuccess({
+            title: 'Saved Successfully!',
+            message: msg || `Saved Guild War ${payload.season} (Round ${roundVal}) successfully!`,
+            onClose: () => {
+              if (google.script.host) google.script.host.close();
+            }
+          });
         })
         .withFailureHandler(err => {
-          alert('Error: ' + err.message);
           btn.disabled = false;
-          btn.textContent = 'Save to Google Sheet';
+          btn.innerHTML = `<svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M5 13l4 4L19 7"/></svg> Save to Google Sheet`;
+          showCustomAlert({
+            type: 'error',
+            title: 'Save Failed',
+            message: err.message || 'An error occurred while saving to Google Sheet. Please try again.'
+          });
         })
         .saveGuildWarData(payload);
     }

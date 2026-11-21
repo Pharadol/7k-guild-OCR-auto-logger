@@ -35,7 +35,7 @@ function saveGuildWarData(payload) {
 
   const roundNum = Number(payload.round);
   if (!roundNum || roundNum < 1 || roundNum > 18) {
-    throw new Error('กรุณาระบุ War Round ให้ถูกต้อง (1-18)');
+    throw new Error('Please specify a valid War Round (1–18)');
   }
   const roundIdx = roundNum - 1;
   const winCol = 2 + (roundIdx * 2);  // Round 1 = Col B (2)
