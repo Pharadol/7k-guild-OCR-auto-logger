@@ -15,11 +15,13 @@ function getGuildWarConfig() {
   const excludedTabs = new Set(['Template', 'Boss Guild', 'Boss Guild Log']);
 
   sheets.forEach(s => {
-    const name = s.getName().trim();
-    const isWarTab = /^Season \d+$/i.test(name) || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/.test(name);
+    const cleanName = s.getName().trim();
+    const isWarTab = /^Season \d+$/i.test(cleanName)
+      || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/.test(cleanName)
+      || /^\d{1,2}[-/]\d{1,2}[-/]\d{2,4}\s*-\s*\d{1,2}[-/]\d{1,2}[-/]\d{2,4}$/.test(cleanName);
 
-    if (!excludedTabs.has(name) && isWarTab) {
-      seasons.push(name);
+    if (!excludedTabs.has(cleanName) && isWarTab) {
+      seasons.push(cleanName);
       const vals = s.getRange(4, 1, 30, 1).getValues().flat().filter(Boolean);
       if (vals.length > 0) members = vals.map(v => String(v).trim());
     }
@@ -30,8 +32,10 @@ function getGuildWarConfig() {
 
 function saveGuildWarData(payload) {
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  const sheet = ss.getSheetByName(payload.season);
-  if (!sheet) throw new Error('Sheet not found: ' + payload.season);
+  const targetSeason = String(payload.season).trim();
+  const sheet = ss.getSheetByName(targetSeason)
+    || ss.getSheets().find(s => s.getName().trim() === targetSeason);
+  if (!sheet) throw new Error('Sheet not found: ' + targetSeason);
 
   const roundNum = Number(payload.round);
   if (!roundNum || roundNum < 1 || roundNum > 18) {
@@ -68,5 +72,5 @@ function saveGuildWarData(payload) {
     }
   });
 
-  return `Saved Guild War ${payload.season} (Round ${roundNum}) for ${updatedCount} members!`;
+  return `Saved Guild War ${targetSeason} (Round ${roundNum}) for ${updatedCount} members!`;
 }
